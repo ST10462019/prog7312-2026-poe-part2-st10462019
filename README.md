@@ -11,11 +11,6 @@ The application uses ASP.NET Core Minimal APIs for HTTP endpoints and a
 browser-based dashboard for monitoring and managing simulated IoT
 devices (Microsoft, n.d.-a).
 
-> **Important:** This project is a simulation unless physical device
-> integration has been configured. Commands do not operate real pumps,
-> relays or valves. The current implementation stores operational state
-> in memory, so data may reset when the application restarts.
-
 ## Contents
 
 -   [Features](#features)
