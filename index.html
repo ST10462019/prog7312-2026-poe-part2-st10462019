@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart-X Gateway</title>
+<style>
+  :root{
+    --bg:#0e1420; --panel:#161e2e; --panel2:#1c2639; --line:#2a3650; --text:#e6ecf7; --muted:#93a0b8;
+    --ok:#3ddc97; --warn:#ffb020; --crit:#ff5c6c; --off:#6b778f; --accent:#4da3ff;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-size:14px}
+  header{display:flex;align-items:center;gap:20px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  .brand{font-weight:700;font-size:18px;letter-spacing:.3px}
+  .brand span{color:var(--accent)}
+  nav{display:flex;gap:6px;flex:1}
+  nav a{color:var(--muted);text-decoration:none;padding:7px 12px;border-radius:8px;border:1px solid transparent}
+  nav a:hover{color:var(--text)}
+  nav a.active{color:var(--text);background:var(--panel2);border-color:var(--line)}
+  nav a.disabled{opacity:.4;pointer-events:none}
+  .live{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--off)}
+  .dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  main{padding:18px 20px;max-width:1500px;margin:0 auto}
+  section.view{display:none} section.view.show{display:block}
+  h2{margin:0 0 12px;font-size:18px} h3{margin:0 0 10px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .pillar{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;transition:.15s}
+  .pillar:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .pillar.disabled{opacity:.45;pointer-events:none}
+  .pillar h3{color:var(--text);font-size:17px;text-transform:none;letter-spacing:0}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+  .badge.ok{color:var(--ok);border-color:var(--ok)} .badge.warn{color:var(--warn);border-color:var(--warn)}
+  .badge.crit{color:var(--crit);border-color:var(--crit)} .badge.off{color:var(--off);border-color:var(--off)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .stat b{display:block;font-size:22px;margin-top:2px} .stat small{color:var(--muted)}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px}
+  @media(max-width:1000px){.layout{grid-template-columns:1fr}}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+  input,select,button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
+  button{cursor:pointer} button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);color:#04101f;border-color:var(--accent);font-weight:600}
+  button.danger{border-color:var(--crit);color:var(--crit)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .devices{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:10px;padding:10px 12px;cursor:pointer}
+  .card.Alert{border-left-color:var(--crit);animation:pulse 1.4s infinite}
+  .card.Offline{border-left-color:var(--off);opacity:.75}
+  .card.sel{outline:2px solid var(--accent)}
+  @keyframes pulse{50%{background:#2a1a24}}
+  .card .top{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}
+  .card .nm{font-weight:600} .card .loc{color:var(--muted);font-size:12px}
+  .card .val{font-size:24px;font-weight:700;margin:8px 0 4px}
+  .gauge{height:5px;border-radius:4px;background:#0b111c;overflow:hidden;margin-bottom:6px}
+  .gauge i{display:block;height:100%;background:var(--ok)}
+  .card.Alert .gauge i{background:var(--crit)} .card.Offline .gauge i{background:var(--off)}
+  .why{font-size:12px;color:var(--crit);min-height:15px}
+  .card .acts{display:flex;gap:6px;margin-top:6px}
+  .card .acts button{padding:4px 9px;font-size:12px;flex:1}
+  .card .acts button.active{background:var(--ok);color:#04140c;border-color:var(--ok)}
+  .side{display:flex;flex-direction:column;gap:14px}
+  .insight{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--panel2)}
+  .insight.sa{border-left:4px solid var(--accent)} .insight.ai{border-left:4px solid var(--warn)}
+  .insight .tag{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+  .insight .tt{font-weight:600;margin:2px 0} .insight .rs{font-size:12px;color:var(--muted)}
+  .conf{height:4px;background:#0b111c;border-radius:3px;margin:6px 0;overflow:hidden}
+  .conf i{display:block;height:100%;background:var(--accent)}
+  .insight .row{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+  .insight button{padding:3px 10px}
+  ul.plain{list-style:none;margin:0;padding:0}
+  ul.plain li{padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;display:flex;justify-content:space-between;gap:8px}
+  ul.plain li.undone{text-decoration:line-through;opacity:.5}
+  .empty{color:var(--muted);font-size:13px}
+  canvas{width:100%;height:210px;display:block}
+  table{width:100%;border-collapse:collapse} th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px}
+  th{color:var(--muted);font-weight:500}
+  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px}
+  .form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+  #toast{position:fixed;right:18px;bottom:18px;background:var(--panel2);border:1px solid var(--line);padding:10px 14px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none;max-width:360px}
+  #toast.show{opacity:1} #toast.err{border-color:var(--crit)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;font-size:12px}
+  .chip.on{background:var(--accent);color:#04101f;border-color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Smart<span>-X</span> Gateway</div>
+  <nav id="nav">
+    <a href="#home" data-v="home">Home</a>
+    <a href="#ingest" data-v="ingest">Sensor Ingestion &amp; Telemetry</a>
+    <a href="#stream" data-v="stream">Real-Time Command Stream</a>
+    <a href="#topology" data-v="topology" class="disabled" title="Final PoE">Network Topology &amp; Mesh</a>
+  </nav>
+  <div class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">connecting…</span></div>
+</header>
+
+<main>
+<section class="view" id="view-home">
+  <h2>Smart-X IoT Mesh Ecosystem</h2>
+  <div class="grid3">
+    <a class="pillar" href="#ingest"><h3>Sensor Data Ingestion &amp; Telemetry</h3>
+      <p class="empty">Register devices, validate payloads and inspect incoming readings.</p><span class="badge ok">Active</span></a>
+    <a class="pillar" href="#stream"><h3>Real-Time Command Stream &amp; History</h3>
+      <p class="empty">Live dashboard, manual overrides with undo, filtering and suggested actions.</p><span class="badge ok">Active</span></a>
+    <a class="pillar disabled" href="#topology"><h3>Network Topology &amp; Mesh Routing</h3>
+      <p class="empty">Mesh graph and routing paths.</p><span class="badge off">Coming soon</span></a>
+  </div>
+</section>
+
+<section class="view" id="view-ingest">
+  <h2>Sensor Data Ingestion &amp; Telemetry</h2>
+  <div class="panel" style="margin-bottom:14px">
+    <h3>Register a sensor</h3>
+    <div class="form">
+      <label>MAC address<div style="display:flex;gap:6px"><input id="rMac" placeholder="AA:BB:CC:DD:EE:FF" style="flex:1"><button id="rGen" type="button">Generate</button></div></label>
+      <label>Name<input id="rName" placeholder="Moisture Sensor F"></label>
+      <label>Deployment location<input id="rLoc" placeholder="Zone 3 / Bay A"></label>
+      <label>Category<select id="rCat"><option>Environmental</option><option>PowerConsumption</option><option>Actuator</option></select></label>
+    </div>
+    <button class="primary" id="rGo">Register device</button> <span id="rMsg" class="empty"></span>
+    <p class="empty" style="margin-bottom:0">Swap this panel for your Part 1 UI (file upload, TelemetryPacket&lt;T&gt; demo) if you have a richer version.</p>
+  </div>
+  <div class="panel"><h3>Registered devices</h3>
+    <table><thead><tr><th>MAC</th><th>Name</th><th>Location</th><th>Category</th><th>Status</th><th>Last seen</th></tr></thead><tbody id="ingestRows"></tbody></table>
+  </div>
+</section>
+
+<section class="view" id="view-stream">
+  <h2>Real-Time Command Stream &amp; History</h2>
+  <div class="stats" id="stats"></div>
+
+  <div class="layout">
+    <div>
+      <div class="toolbar">
+        <input id="fQ" type="search" placeholder="Search devices (e.g. pump a, zone 1)…" style="min-width:240px;flex:1">
+        <select id="fCat"><option value="">All categories</option><option value="Environmental">Environmental</option><option value="PowerConsumption">Power consumption</option><option value="Actuator">Actuator</option></select>
+        <div class="chips" id="fStatus">
+          <span class="chip on" data-s="">All</span><span class="chip" data-s="Alert">Alerting</span><span class="chip" data-s="Offline">Offline</span><span class="chip" data-s="Online">Healthy</span>
+        </div>
+      </div>
+      <div class="devices" id="grid"></div>
+
+      <div class="panel" style="margin-top:14px">
+        <h3 id="tlTitle">Timeline</h3>
+        <canvas id="tl"></canvas>
+        <div class="empty" id="tlHint">Select a device card to see its history timeline.</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <h3>Suggested actions &amp; automated insights</h3>
+        <div id="insights"><div class="empty">Learning from your activity…</div></div>
+      </div>
+      <div class="panel">
+        <h3>Override commands</h3>
+        <div class="toolbar" style="margin-bottom:8px">
+          <button id="allOff" class="danger">All actuators OFF</button>
+          <button id="undo">↶ Undo last (<span id="undoN">0</span>)</button>
+        </div>
+        <ul class="plain" id="cmdLog"><li class="empty">No commands yet.</li></ul>
+      </div>
+      <div class="panel">
+        <h3>Device simulator <span class="badge" id="simBadge">stopped</span></h3>
+        <p class="empty" style="margin-top:0">Every reading is an HTTP POST to <code>/api/telemetry</code>, exactly like an ESP32 would send.</p>
+        <div class="toolbar">
+          <button id="simToggle" class="primary">Start simulator</button>
+          <button id="simBurst">Burst 600 packets</button>
+        </div>
+        <div class="toolbar">
+          <button id="simDrop" class="danger">Moisture B drop</button>
+          <button id="simSpike" class="danger">Meter 1 spike</button>
+          <button id="simCut">Disconnect a node</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="view-topology">
+  <h2>Network Topology &amp; Mesh Routing</h2>
+  <div class="panel empty">Disabled — to be implemented in the final PoE.</div>
+</section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path, opts = {}) {
+  const r = await fetch('/api' + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  let body = null; try { body = await r.json(); } catch {}
+  if (!r.ok) throw Object.assign(new Error(body?.error || r.statusText), { status: r.status });
+  return body;
+}
+const post = (p, b) => api(p, { method: 'POST', body: JSON.stringify(b ?? {}) });
+let toastT;
+function toast(msg, err = false) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.className = '', 2800);
+}
+const seen = d => d.lastSeenUtc && !d.lastSeenUtc.startsWith('0001');
+const fmt = v => Number.isInteger(v) ? v : v.toFixed(1);
+const ago = iso => { const s = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000)); return s < 60 ? s + 's ago' : Math.round(s / 60) + 'm ago'; };
+
+const saved = JSON.parse(sessionStorage.getItem('smartx.filters') || '{}');
+const state = { devices: [], all: [], stats: null, insights: [], commands: { undoDepth: 0, recent: [] }, selected: sessionStorage.getItem('smartx.sel'), history: [],
+                f: { q: saved.q || '', category: saved.category || '', status: saved.status || '' } };
+const saveFilters = () => sessionStorage.setItem('smartx.filters', JSON.stringify(state.f));
+
+function route() {
+  let v = (location.hash || '#home').slice(1);
+  if (!['home', 'ingest', 'stream'].includes(v)) v = 'home';   
+  document.querySelectorAll('section.view').forEach(s => s.classList.toggle('show', s.id === 'view-' + v));
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.v === v));
+  if (v === 'stream') drawTimeline();
+}
+addEventListener('hashchange', route);
+
+let busy = false;
+async function refresh() {
+  if (busy) return; busy = true;
+  try {
+    const f = state.f, qs = new URLSearchParams();
+    if (f.q) qs.set('q', f.q); if (f.category) qs.set('category', f.category); if (f.status) qs.set('status', f.status);
+    const [devices, all, stats, insights, commands] = await Promise.all([
+      api('/devices?' + qs), api('/devices'), api('/stats'), api('/insights'), api('/commands')]);
+    Object.assign(state, { devices, all, stats, insights, commands });
+    if (state.selected) state.history = await api(`/devices/${encodeURIComponent(state.selected)}/history?take=120`).catch(() => []);
+    renderAll(); setLive(true);
+  } catch { setLive(false); } finally { busy = false; }
+}
+function setLive(on) { $('#liveDot').className = 'dot' + (on ? ' on' : ''); $('#liveTxt').textContent = on ? 'API live' : 'API unreachable'; }
+
+let lastGrid = '', lastIns = '', lastLog = '', lastIngest = '';
+function renderAll() { renderStats(); renderGrid(); renderInsights(); renderLog(); renderIngest(); drawTimeline(); }
+
+function renderStats() {
+  const s = state.stats; if (!s) return;
+  const items = [['Devices', s.devices], ['Healthy', s.online], ['Alerting', s.alerting], ['Offline', s.offline],
+    ['FIFO queue', s.standardQueueDepth], ['Priority queue', s.priorityQueueDepth],
+    ['Processed (std)', s.processedStandard], ['Processed (critical)', s.processedCritical], ['Duplicate alerts blocked', s.duplicateAlertsSuppressed]];
+  $('#stats').innerHTML = items.map(([k, v]) => `<div class="stat"><small>${k}</small><b>${v}</b></div>`).join('');
+}
+
+function card(d) {
+  const act = d.category === 'Actuator';
+  const val = act ? (d.actuatorOn ? 'ON' : 'OFF') : (seen(d) ? `${fmt(d.lastValue)} <small>${esc(d.unit)}</small>` : '—');
+  const lo = d.critMin ?? d.warnMin ?? 0, hi = d.critMax ?? (d.warnMax ? d.warnMax * 1.3 : 100);
+  const pct = act ? (d.actuatorOn ? 100 : 0) : Math.max(0, Math.min(100, ((d.lastValue - lo) / (hi - lo)) * 100));
+  const cls = d.status === 'Alert' ? 'crit' : d.status === 'Offline' ? 'off' : 'ok';
+  const buttons = act ? `<div class="acts">
+      <button data-act="on" data-mac="${d.mac}" class="${d.actuatorOn ? 'active' : ''}">ON</button>
+      <button data-act="off" data-mac="${d.mac}" class="${!d.actuatorOn ? 'active' : ''}">OFF</button>
+      <button data-act="toggle" data-mac="${d.mac}">Toggle</button></div>` : '';
+  return `<div class="card ${d.status} ${state.selected === d.mac ? 'sel' : ''}" data-mac="${d.mac}">
+    <div class="top"><div><div class="nm">${esc(d.name)}</div><div class="loc">${esc(d.location)}</div></div><span class="badge ${cls}">${d.status}</span></div>
+    <div class="val">${val}</div><div class="gauge"><i style="width:${pct}%"></i></div>
+    <div class="why">${esc(d.alertReason || '')}</div>
+    <div class="loc">${seen(d) ? 'seen ' + ago(d.lastSeenUtc) : 'no data yet'}</div>${buttons}</div>`;
+}
+function renderGrid() {
+  const html = state.devices.length ? state.devices.map(card).join('') : '<div class="empty">No devices match these filters.</div>';
+  if (html !== lastGrid) { $('#grid').innerHTML = html; lastGrid = html; }
+}
+
+function renderInsights() {
+  const html = state.insights.length ? state.insights.map((i, n) => {
+    const sa = i.kind === 'Suggested action';
+    const btn = i.action === 'on' || i.action === 'off' ? `<button class="primary" data-ins="${n}">Apply</button>`
+              : i.action?.startsWith('search:') ? `<button data-ins="${n}">Search</button>`
+              : i.mac ? `<button data-ins="${n}">Inspect</button>` : '';
+    return `<div class="insight ${sa ? 'sa' : 'ai'}"><div class="tag">${esc(i.kind)}</div><div class="tt">${esc(i.title)}</div>
+      <div class="rs">${esc(i.reason)}</div><div class="conf"><i style="width:${Math.round(i.confidence * 100)}%"></i></div>
+      <div class="row"><span>${Math.round(i.confidence * 100)}% confidence</span>${btn}</div></div>`;
+  }).join('') : '<div class="empty">All clear — no suggestions right now.</div>';
+  if (html !== lastIns) { $('#insights').innerHTML = html; lastIns = html; }
+}
+
+function renderLog() {
+  const name = mac => state.all.find(d => d.mac === mac)?.name ?? mac;
+  const c = state.commands;
+  $('#undoN').textContent = c.undoDepth; $('#undo').disabled = c.undoDepth === 0;
+  const html = c.recent.length ? c.recent.map(r => `<li class="${r.undone ? 'undone' : ''}"><span>${esc(r.action.toUpperCase())} · ${esc(r.targets.length > 1 ? r.targets.length + ' devices' : name(r.targets[0]))}</span><span class="empty">${new Date(r.timestampUtc).toLocaleTimeString()}</span></li>`).join('')
+    : '<li class="empty">No commands yet.</li>';
+  if (html !== lastLog) { $('#cmdLog').innerHTML = html; lastLog = html; }
+}
+
+function renderIngest() {
+  const html = state.all.map(d => `<tr><td>${d.mac}</td><td>${esc(d.name)}</td><td>${esc(d.location)}</td><td>${d.category}</td><td><span class="badge ${d.status === 'Alert' ? 'crit' : d.status === 'Offline' ? 'off' : 'ok'}">${d.status}</span></td><td>${seen(d) ? ago(d.lastSeenUtc) : '—'}</td></tr>`).join('');
+  if (html !== lastIngest) { $('#ingestRows').innerHTML = html; lastIngest = html; }
+}
+
+function drawTimeline() {
+  const cv = $('#tl'); if (!cv.offsetWidth) return;
+  const dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const g = cv.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+  const d = state.all.find(x => x.mac === state.selected);
+  $('#tlTitle').textContent = d ? `Timeline — ${d.name}` : 'Timeline';
+  $('#tlHint').style.display = d && state.history.length > 1 ? 'none' : 'block';
+  if (!d || state.history.length < 2) return;
+
+  const vals = state.history.map(p => p.v);
+  const lines = [d.warnMin, d.warnMax, d.critMin, d.critMax].filter(x => x != null);
+  let lo = Math.min(...vals, ...lines), hi = Math.max(...vals, ...lines); if (hi === lo) hi = lo + 1;
+  const pad = 26, X = i => pad + (i / (vals.length - 1)) * (w - pad * 1.5), Y = v => h - 18 - ((v - lo) / (hi - lo)) * (h - 36);
+  g.font = '11px system-ui'; g.fillStyle = '#93a0b8';
+  const hl = (v, col) => { g.strokeStyle = col; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(pad, Y(v)); g.lineTo(w - 6, Y(v)); g.stroke(); g.setLineDash([]); g.fillText(fmt(v), 2, Y(v) - 2); };
+  if (d.warnMin != null) hl(d.warnMin, '#ffb020'); if (d.warnMax != null) hl(d.warnMax, '#ffb020');
+  if (d.critMin != null) hl(d.critMin, '#ff5c6c'); if (d.critMax != null) hl(d.critMax, '#ff5c6c');
+  g.strokeStyle = '#4da3ff'; g.lineWidth = 2; g.beginPath();
+  vals.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v))); g.stroke(); g.lineWidth = 1;
+  vals.forEach((v, i) => { const bad = (d.critMin != null && v < d.critMin) || (d.critMax != null && v > d.critMax) || (d.warnMin != null && v < d.warnMin) || (d.warnMax != null && v > d.warnMax);
+    if (bad) { g.fillStyle = '#ff5c6c'; g.beginPath(); g.arc(X(i), Y(v), 3.5, 0, 7); g.fill(); } });
+}
+addEventListener('resize', drawTimeline);
+
+async function sendCommand(macs, action) {
+  try { const r = await post('/commands', { macs, action }); toast(r.message); } catch (e) { toast(e.message, true); }
+  refresh();
+}
+$('#grid').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]');
+  if (b) { e.stopPropagation(); return sendCommand([b.dataset.mac], b.dataset.act); }
+  const c = e.target.closest('.card'); if (!c) return;
+  state.selected = c.dataset.mac; sessionStorage.setItem('smartx.sel', state.selected); lastGrid = ''; refresh();
+});
+$('#insights').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-ins]'); if (!b) return;
+  const i = state.insights[+b.dataset.ins];
+  if (i.action === 'on' || i.action === 'off') return sendCommand([i.mac], i.action);
+  if (i.action?.startsWith('search:')) { $('#fQ').value = i.action.slice(7); state.f.q = $('#fQ').value; saveFilters(); lastGrid = ''; return refresh(); }
+  if (i.mac) { state.selected = i.mac; sessionStorage.setItem('smartx.sel', i.mac); lastGrid = ''; refresh(); }
+});
+$('#allOff').onclick = () => sendCommand(state.all.filter(d => d.category === 'Actuator').map(d => d.mac), 'off');
+$('#undo').onclick = async () => { try { toast((await post('/commands/undo')).message); } catch (e) { toast(e.message, true); } refresh(); };
+
+let qT, logT;
+$('#fQ').value = state.f.q; $('#fCat').value = state.f.category;
+$('#fQ').addEventListener('input', e => {
+  state.f.q = e.target.value; saveFilters(); clearTimeout(qT); qT = setTimeout(refresh, 200);
+  clearTimeout(logT); logT = setTimeout(() => { const t = state.f.q.trim(); if (t.length >= 3) post('/search-log', { text: t }).catch(() => {}); }, 1200);
+});
+$('#fCat').onchange = e => { state.f.category = e.target.value; saveFilters(); refresh(); };
+document.querySelectorAll('#fStatus .chip').forEach(c => {
+  c.classList.toggle('on', c.dataset.s === state.f.status);
+  c.onclick = () => { state.f.status = c.dataset.s; document.querySelectorAll('#fStatus .chip').forEach(x => x.classList.toggle('on', x === c)); saveFilters(); refresh(); };
+});
+
+$('#rGen').onclick = () => { const h = () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase(); $('#rMac').value = `AA:BB:CC:${h()}:${h()}:${h()}`; };
+$('#rGo').onclick = async () => {
+  try {
+    const d = await post('/devices', { mac: $('#rMac').value, name: $('#rName').value, location: $('#rLoc').value, category: $('#rCat').value });
+    $('#rMsg').textContent = `Registered ${d.name}.`; refresh();
+  } catch (e) { $('#rMsg').textContent = e.message; }
+};
+
+const sim = { on: false, timer: null, m: {} };
+const rnd = () => Math.random() - 0.5;
+function post1(body) { return fetch('/api/telemetry', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => {}); }
+async function simTick() {
+  let devs; try { devs = await api('/devices'); } catch { return; }
+  const pumpLocs = devs.filter(d => d.category === 'Actuator' && d.actuatorOn).map(d => d.location);
+  const sends = [];
+  for (const d of devs) {
+    const s = sim.m[d.mac] ??= { v: null, mode: 'normal', ticks: 0 };
+    if (s.mode !== 'normal' && --s.ticks <= 0) s.mode = 'normal';
+    if (s.mode === 'offline') continue;                                     
+    if (d.category === 'Actuator') { sends.push(post1({ mac: d.mac, state: d.actuatorOn })); continue; }
+    const lo = d.warnMin ?? 0, hi = d.warnMax ?? d.critMax ?? 100, span = hi - lo, mid = (lo + hi) / 2;
+    if (s.v === null) s.v = mid;
+    const irrigated = d.name.includes('Moisture') && pumpLocs.includes(d.location);
+    if (irrigated && s.mode === 'drop') s.mode = 'normal';
+    let target = irrigated ? hi * 0.9 : mid;
+    if (s.mode === 'drop') target = (d.critMin ?? lo) - span * 0.2;
+    if (s.mode === 'spike') target = (d.critMax ?? hi) + span * 0.15;
+    if (s.mode === 'normal' && !irrigated && d.category !== 'Actuator' && Math.random() < 0.008) { s.mode = Math.random() < .5 ? 'drop' : 'spike'; s.ticks = 8; }
+    if (s.mode === 'normal' && Math.random() < 0.003) { s.mode = 'offline'; s.ticks = 12; }
+    s.v += (target - s.v) * 0.35 + rnd() * span * 0.03;
+    const v = d.unit === 'W' ? Math.round(s.v) : Math.round(s.v * 100) / 100;
+    sends.push(post1({ mac: d.mac, value: v }));
+  }
+  await Promise.all(sends);
+}
+$('#simToggle').onclick = () => {
+  sim.on = !sim.on;
+  if (sim.on) { simTick(); sim.timer = setInterval(simTick, 1000); } else clearInterval(sim.timer);
+  $('#simToggle').textContent = sim.on ? 'Stop simulator' : 'Start simulator';
+  $('#simBadge').textContent = sim.on ? 'running' : 'stopped'; $('#simBadge').className = 'badge ' + (sim.on ? 'ok' : '');
+};
+const find = n => state.all.find(d => d.name.includes(n));
+$('#simDrop').onclick = async () => { const d = find('Moisture Sensor B'); if (d) { await post1({ mac: d.mac, value: 12 }); toast('Critical moisture packet sent (priority queue)'); refresh(); } };
+$('#simSpike').onclick = async () => { const d = find('Smart Meter 1'); if (d) { await post1({ mac: d.mac, value: 3900 }); toast('Power spike packet sent (priority queue)'); refresh(); } };
+$('#simCut').onclick = () => {
+  const c = state.all.filter(d => d.category !== 'Actuator' && seen(d)); if (!c.length) return toast('Start the simulator first', true);
+  const d = c[Math.floor(Math.random() * c.length)];
+  sim.m[d.mac] = { v: sim.m[d.mac]?.v ?? null, mode: 'offline', ticks: 14 }; toast(`${d.name} will go silent for ~14s`);
+};
+$('#simBurst').onclick = async () => {
+  const sensors = state.all.filter(d => d.category !== 'Actuator'); if (!sensors.length) return;
+  const batch = Array.from({ length: 600 }, (_, i) => {
+    const d = sensors[i % sensors.length], mid = ((d.warnMin ?? 0) + (d.warnMax ?? 100)) / 2;
+    return { mac: d.mac, value: i % 97 === 0 ? (d.critMax ?? mid) * 1.2 : mid + rnd() * 5 };
+  });
+  const t0 = performance.now();
+  try { const r = await post('/telemetry/batch', batch); toast(`600 packets in ${Math.round(performance.now() - t0)} ms — ${r.standard} FIFO, ${r.critical} priority`); } catch (e) { toast(e.message, true); }
+  refresh();
+};
+
+route(); refresh(); setInterval(refresh, 1000);
+</script>
+</body>
+</html>
