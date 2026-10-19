@@ -117,13 +117,9 @@ If the project is hosted on GitHub, clone your repository and enter its
 directory:
 
 ``` bash
-git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
+git clone https://github.com/ST10462019/prog7312-2026-poe-part2-st10462019.git
 cd YOUR-REPOSITORY
 ```
-
-Replace the placeholder URL with the actual repository URL. If you have
-downloaded the project as a ZIP file, extract it and open a terminal in
-the folder containing `SmartX.sln`.
 
 ### 2. Restore dependencies
 
