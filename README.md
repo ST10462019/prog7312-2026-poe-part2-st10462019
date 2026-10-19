@@ -9,7 +9,7 @@ dotnet run --project src/SmartX.Part2.Api          # then open the URL it prints
 dotnet test                                          # runs all tests
 ```
 
-## 3-minute demo script (for your video / marker)
+## demo script for the video
 
 1. **Home** – three pillars; Topology is disabled.
 2. Open **Real-Time Command Stream**. Click **Start simulator** – every reading is a real `POST /api/telemetry`.
@@ -54,9 +54,3 @@ curl -X POST http://localhost:5000/api/telemetry -H "Content-Type: application/j
      -d '{"mac":"AA:BB:CC:00:00:02","value":12}'
 ```
 
-## Merging with your Part 1
-
-The Ingestion view here is a compact stand-in. Keep your Part 1 `TelemetryPacket<T>`, operator overloading, jagged arrays,
-recursive validator and file upload, and copy in: `Services/*`, `Models/Models.cs`, `Endpoints.cs`, the `Stream` section of
-`index.html`, and the DI lines from `Program.cs`. Convert your packets to `TelemetryPacket(mac, double, timestamp)` at the API edge
-(bool → 1/0).
