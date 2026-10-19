@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/SmartX.Part2.Api/SmartX.Part2.Api.csproj" />
+  <Project Path="tests/SmartX.Part2.Tests/SmartX.Part2.Tests.csproj" />
+</Solution>
