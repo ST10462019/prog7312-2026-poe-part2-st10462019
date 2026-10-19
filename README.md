@@ -1,6 +1,6 @@
 # Smart-X Part 2: Real-Time Processing and Device Management
 
-**Smart-X IoT Mesh Ecosystem \| Proof of Evidence (PoE) --- Part 2**
+**Smart-X IoT Mesh Ecosystem \| Portfolio of Evidence (PoE) --- Part 2**
 
 Smart-X is an educational Internet of Things (IoT) gateway and
 device-management application. Part 2 extends the gateway with telemetry
