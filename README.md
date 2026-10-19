@@ -391,6 +391,6 @@ https://dotnet.microsoft.com/download (Accessed: 19 October 2026).
 
 ------------------------------------------------------------------------
 
-**Smart-X IoT Mesh Ecosystem --- Part 2: Real-Time Processing and Device
+**Smart-X IoT Mesh Ecosystem --- PoE Part 2: Real-Time Processing and Device
 Management**
 
